@@ -210,9 +210,9 @@ var Engine = (function(global) {
      */
     global.ctx = ctx;
 
-    return init;
+    return {'init': init};
 })(this);
 
 function playAgain() {
-    Engine();
+    Engine.init();
 }
