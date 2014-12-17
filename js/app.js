@@ -1,3 +1,9 @@
+
+var enemyTopRow = 62;
+var enemyMiddleRow = 145;
+var enemyBottomRow = 230;
+var enemyStartPosition = -100;
+var enemyResetPosition = 500;
 // Enemies our player must avoid
 var Enemy = function(speed, row) {
     // Variables applied to each of our instances go here,
@@ -6,15 +12,15 @@ var Enemy = function(speed, row) {
     // The image/sprite for our enemies, this uses
     // a helper we've provided to easily load images
     this.sprite = 'images/enemy-bug.png';
-    this.x = -50; //-100 through 500
+
+    this.x = enemyStartPosition; // Enemies move from -100 through 500
+
     if(row === 1) {
-        this.y = 62;
+        this.y = enemyTopRow;
     } else if (row === 2) {
-        this.y = 145;
-    } else if (row === 3) {
-        this.y = 230;
+        this.y = enemyMiddleRow;
     } else {
-        this.y = 230;
+        this.y = enemyBottomRow;
     }
     this.speed = speed;
 };
@@ -26,8 +32,8 @@ Enemy.prototype.update = function(dt) {
     // which will ensure the game runs at the same speed for
     // all computers.
     this.x = this.x + this.speed * dt;
-    if (this.x >= 500) {
-        this.x = -100;
+    if (this.x >= enemyResetPosition) {
+        this.x = enemyStartPosition;
     }
 };
 
@@ -40,25 +46,27 @@ Enemy.prototype.render = function() {
 // This class requires an update(), render() and
 // a handleInput() method.
 var playerStartX = 200;
-var playerStartY = 410;
+var playerStartY = 435;
 var Player = function() {
     this.sprite = 'images/char-boy.png';
     this.x = playerStartX;
     this.y = playerStartY;
-    this.speed = 85;
+    this.speed = 25.25;
     this.score = 0;
 };
 
-Player.prototype.update = function(time) {
-    if (this.y < 0) {
+Player.prototype.update = function() {
+    if (this.y < -15) {
         this.score++;
         updateScore(this.score);
     }
 };
 
 Player.prototype.render = function() {
-    if (this.y < 0) {
+    if (this.y < -15) {
         delayedPlayerReset(this);
+    } else if (this.y >= playerStartY) {
+      this.y == playerStartY
     }
     ctx.drawImage(Resources.get(this.sprite), this.x, this.y);
 };
@@ -91,6 +99,9 @@ function updateScore(score) {
 // Now instantiate your objects.
 // Place all enemy objects in an array called allEnemies
 // Place the player object in a variable called player
+var generateEnemies = function(min, max) {
+  return Math.floor(Math.random() * (max - min)) + min;
+}
 var slowBug = new Enemy(10, 1);
 var moderateBug = new Enemy(20, 3);
 var fastBug = new Enemy(40, 2);
