@@ -46,51 +46,54 @@ Enemy.prototype.render = function() {
 // This class requires an update(), render() and
 // a handleInput() method.
 var playerStartX = 200;
-var playerStartY = 435;
+var playerStartY = 412;
 var Player = function() {
     this.sprite = 'images/char-boy.png';
     this.x = playerStartX;
     this.y = playerStartY;
-    this.speed = 25.25;
+    this.verticalSpeed = 85;
+    this.horizontalSpeed = 40;
     this.score = 0;
 };
 
 Player.prototype.update = function() {
-    if (this.y < -15) {
+    if (this.y < -13) {
         this.score++;
+        this.resetPosition();
         updateScore(this.score);
+    } else if (this.y >= playerStartY) {
+        this.y = playerStartY;
+    }
+    if (this.x < 0) {
+        this.x = 0;
+    }
+    if (this.x > 400) {
+        this.x = 400;
     }
 };
 
 Player.prototype.render = function() {
-    if (this.y < -15) {
-        delayedPlayerReset(this);
-    } else if (this.y >= playerStartY) {
-      this.y == playerStartY
-    }
     ctx.drawImage(Resources.get(this.sprite), this.x, this.y);
 };
 
 Player.prototype.handleInput = function(direction) {
     if (direction === 'left') {
-        this.x -= this.speed;
+        this.x -= this.horizontalSpeed;
     } else if (direction === 'up') {
-        this.y -= this.speed;
+        this.y -= this.verticalSpeed;
     } else if (direction === 'right') {
-        this.x += this.speed;
+        this.x += this.horizontalSpeed;
     } else if (direction === 'down') {
-        this.y += this.speed;
+        this.y += this.verticalSpeed;
     } else {}
+    console.log("X: " + this.x);
+    console.log("Y: " + this.y);
 };
 
-function delayedPlayerReset(player) {
-    window.setTimeout(resetPlayerPosition(player), 10000);
-}
-
-function resetPlayerPosition(player) {
+Player.prototype.resetPosition = function() {
     player.x = playerStartX;
     player.y = playerStartY;
-}
+};
 
 function updateScore(score) {
     var scoreSpan = document.getElementById("score");
@@ -99,15 +102,34 @@ function updateScore(score) {
 // Now instantiate your objects.
 // Place all enemy objects in an array called allEnemies
 // Place the player object in a variable called player
-var generateEnemies = function(min, max) {
-  return Math.floor(Math.random() * (max - min)) + min;
+var allEnemies = generateEnemies(3, 6);
+
+function generateEnemies(min, max) {
+    var enemies = [];
+    var numEnemies = randomInteger(min, max);
+    console.log(numEnemies);
+    for (var i = 0; i < numEnemies; i++) {
+        var enemySpeed = randomInteger(10, 61);
+        var enemyRow = randomInteger(1, 4);
+        console.log(enemyRow);
+        enemies.push(new Enemy(enemySpeed, enemyRow));
+    }
+    return enemies;
 }
-var slowBug = new Enemy(10, 1);
-var moderateBug = new Enemy(20, 3);
-var fastBug = new Enemy(40, 2);
-var allEnemies = [slowBug, moderateBug, fastBug];
+
+// Return a random integer between min and max (exclusive)
+function randomInteger(min, max) {
+    return Math.floor(Math.random() * (max - min)) + min;
+}
+
 var player = new Player();
 
+// Prevent browser window scrolling when using arrow keys
+window.addEventListener("keydown", function(e) {
+    if([32, 37, 38, 39, 40].indexOf(e.keyCode) > -1) {
+        e.preventDefault();
+    }
+});
 
 // This listens for key presses and sends the keys to your
 // Player.handleInput() method. You don't need to modify this.

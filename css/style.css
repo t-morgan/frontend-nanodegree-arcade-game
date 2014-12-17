@@ -6,6 +6,10 @@ body {
     clear: both;
 }
 
+#game-info {
+    margin-bottom: -50px;
+}
+
 .stats {
     display: inline-block;
     padding: 10px;
