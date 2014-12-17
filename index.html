@@ -4,15 +4,29 @@
     <title>Effective JavaScript: Frogger</title>
     <link rel="stylesheet" href="css/style.css">
     <meta charset="UTF-8">
+    <script type="text/javascript">function overlay() {
+        el = document.getElementById("overlay");
+        el.style.visibility = (el.style.visibility == "visible") ? "hidden" : "visible";
+    }</script>
 </head>
 <body>
-    <div id="game-info">
-        <span class="stats">Lives: <span id="lives" class="stat-value">5</span></span>
-        <span class="stats">Score: <span id="score" class="stat-value">0</span></span>
+    <div id="page-wrap">
+        <div id="game-info">
+            <span class="stats">Lives: <span id="lives" class="stat-value"></span></span>
+            <span class="stats">Score: <span id="score" class="stat-value"></span></span>
+        </div>
+        <div class="clear"></div>
+        <script src="js/resources.js"></script>
+        <script src="js/app.js"></script>
+        <script src="js/engine.js"></script>
     </div>
-    <div class="clear"></div>
-    <script src="js/resources.js"></script>
-    <script src="js/app.js"></script>
-    <script src="js/engine.js"></script>
+    <div id="modal">
+        <div>
+            <p>Game over!</p>
+            <p>Your score: <span id="final-score"></span></p>
+            <button onclick="playAgain()">Play Again</button>
+            <button >Quit</button>
+        </div>
+    </div>
 </body>
 </html>

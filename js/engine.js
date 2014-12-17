@@ -27,7 +27,7 @@ var Engine = (function(global) {
 
     canvas.width = 505;
     canvas.height = 606;
-    doc.body.appendChild(canvas);
+    doc.getElementById('page-wrap').appendChild(canvas);
 
     /* This function serves as the kickoff point for the game loop itself
      * and handles properly calling the update and render methods.
@@ -64,9 +64,13 @@ var Engine = (function(global) {
      * game loop.
      */
     function init() {
+        console.log("Called init()");
+        doc.body.className = '';
         reset();
         lastTime = Date.now();
         main();
+        updateLives(player.lives);
+        updateScore(player.score);
     }
 
     /* This function is called by main (our game loop) and itself calls all
@@ -80,7 +84,7 @@ var Engine = (function(global) {
      */
     function update(dt) {
         updateEntities(dt);
-        // checkCollisions();
+        checkCollisions();
     }
 
     /* This is called by the update function  and loops through all of the
@@ -95,6 +99,29 @@ var Engine = (function(global) {
             enemy.update(dt);
         });
         player.update();
+    }
+
+    function checkCollisions() {
+        allEnemies.forEach(function(enemy) {
+            var enemyTrueX = enemy.x + enemy.xOffset;
+            var playerTrueX = player.x + player.xOffset;
+            if ((enemyTrueX <= playerTrueX &&
+                enemyTrueX + enemy.width >= playerTrueX)  ||
+                (enemyTrueX <= playerTrueX + player.width &&
+                enemyTrueX + enemy.width >= playerTrueX + player.width)) {
+                if (enemy.row === player.row) {
+                    player.resetPlayer();
+                    player.lives--;
+                    console.log(player.lives);
+                    updateLives(player.lives);
+                }
+            }
+            if (player.lives === 0) {
+                player.lives--;
+                doc.getElementById('final-score').innerHTML = player.score;
+                doc.body.className = "dialogIsOpen";
+            }
+        });
     }
 
     /* This function initially draws the "game level", it will then call
@@ -160,7 +187,8 @@ var Engine = (function(global) {
      * those sorts of things. It's only called once by the init() method.
      */
     function reset() {
-        // noop
+        player.score = 0;
+        player.lives = 5;
     }
 
     /* Go ahead and load all of the images we know we're going to need to
@@ -181,4 +209,10 @@ var Engine = (function(global) {
      * from within their app.js files.
      */
     global.ctx = ctx;
+
+    return init;
 })(this);
+
+function playAgain() {
+    Engine();
+}

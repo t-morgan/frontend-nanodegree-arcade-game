@@ -1,29 +1,41 @@
+var Character = function(x, width, height, row) {
+    if(row === 1) {
+        this.y = enemyTopRowY;
+    } else if (row === 2) {
+        this.y = enemyMiddleRowY;
+    } else if (row === 3) {
+        this.y = enemyBottomRowY;
+    } else {
+        this.y = playerStartY;
+    }
 
-var enemyTopRow = 62;
-var enemyMiddleRow = 145;
-var enemyBottomRow = 230;
-var enemyStartPosition = -100;
+    this.x = x;
+    this.width = width;
+    this.height = height;
+    this.row = row;
+};
+
+var enemyTopRowY = 62;
+var enemyMiddleRowY = 145;
+var enemyBottomRowY = 230;
+var enemyStartPosition = -100; // Enemies move from -100 through 500
 var enemyResetPosition = 500;
+var enemyWidth = 98;
+var enemyHeight = 64;
 // Enemies our player must avoid
-var Enemy = function(speed, row) {
+var Enemy = function(x, row, speed) {
+    Character.call(this, x, enemyWidth, enemyHeight, row);
     // Variables applied to each of our instances go here,
     // we've provided one for you to get started
 
     // The image/sprite for our enemies, this uses
     // a helper we've provided to easily load images
     this.sprite = 'images/enemy-bug.png';
-
-    this.x = enemyStartPosition; // Enemies move from -100 through 500
-
-    if(row === 1) {
-        this.y = enemyTopRow;
-    } else if (row === 2) {
-        this.y = enemyMiddleRow;
-    } else {
-        this.y = enemyBottomRow;
-    }
+    this.xOffset = 4;
     this.speed = speed;
 };
+Enemy.prototype = Object.create(Character.prototype);
+Enemy.prototype.constructor = Enemy;
 
 // Update the enemy's position, required method for game
 // Parameter: dt, a time delta between ticks
@@ -47,20 +59,29 @@ Enemy.prototype.render = function() {
 // a handleInput() method.
 var playerStartX = 200;
 var playerStartY = 412;
+var playerWidth = 66;
+var playerHeight = 74;
+var playerStartRow = 5;
+var playerStartLives = 5;
+var playerStartScore = 0;
 var Player = function() {
+    Character.call(this, playerStartX, playerWidth, playerHeight, playerStartRow);
+
     this.sprite = 'images/char-boy.png';
-    this.x = playerStartX;
-    this.y = playerStartY;
+    this.xOffset = 19;
     this.verticalSpeed = 85;
     this.horizontalSpeed = 40;
-    this.score = 0;
+    this.lives = playerStartLives;
+    this.score = playerStartScore;
 };
+Player.prototype = Object.create(Character.prototype);
+Player.prototype.constructor = Player;
 
 Player.prototype.update = function() {
     if (this.y < -13) {
         this.score++;
-        this.resetPosition();
         updateScore(this.score);
+        this.resetPlayer();
     } else if (this.y >= playerStartY) {
         this.y = playerStartY;
     }
@@ -81,23 +102,27 @@ Player.prototype.handleInput = function(direction) {
         this.x -= this.horizontalSpeed;
     } else if (direction === 'up') {
         this.y -= this.verticalSpeed;
+        this.row--;
     } else if (direction === 'right') {
         this.x += this.horizontalSpeed;
     } else if (direction === 'down') {
         this.y += this.verticalSpeed;
+        if (this.row != playerStartRow) {this.row++;}
     } else {}
-    console.log("X: " + this.x);
-    console.log("Y: " + this.y);
 };
 
-Player.prototype.resetPosition = function() {
+Player.prototype.resetPlayer = function() {
     player.x = playerStartX;
     player.y = playerStartY;
+    player.row = playerStartRow;
 };
 
 function updateScore(score) {
-    var scoreSpan = document.getElementById("score");
-    scoreSpan.innerHTML = score;
+    document.getElementById("score").innerHTML = score;
+}
+
+function updateLives(lives) {
+    document.getElementById("lives").innerHTML = lives;
 }
 // Now instantiate your objects.
 // Place all enemy objects in an array called allEnemies
@@ -109,10 +134,11 @@ function generateEnemies(min, max) {
     var numEnemies = randomInteger(min, max);
     console.log(numEnemies);
     for (var i = 0; i < numEnemies; i++) {
-        var enemySpeed = randomInteger(10, 61);
+        var enemyStartX = randomInteger(enemyStartPosition, enemyResetPosition);
         var enemyRow = randomInteger(1, 4);
+        var enemySpeed = randomInteger(10, 61);
         console.log(enemyRow);
-        enemies.push(new Enemy(enemySpeed, enemyRow));
+        enemies.push(new Enemy(enemyStartX, enemyRow, enemySpeed));
     }
     return enemies;
 }
