@@ -64,8 +64,7 @@ var Engine = (function(global) {
      * game loop.
      */
     function init() {
-        console.log("Called init()");
-        doc.body.className = '';
+        clearBodyClass();
         reset();
         lastTime = Date.now();
         main();
@@ -85,6 +84,7 @@ var Engine = (function(global) {
     function update(dt) {
         updateEntities(dt);
         checkCollisions();
+        checkGoalReached();
     }
 
     /* This is called by the update function  and loops through all of the
@@ -103,25 +103,80 @@ var Engine = (function(global) {
 
     function checkCollisions() {
         allEnemies.forEach(function(enemy) {
-            var enemyTrueX = enemy.x + enemy.xOffset;
-            var playerTrueX = player.x + player.xOffset;
-            if ((enemyTrueX <= playerTrueX &&
-                enemyTrueX + enemy.width >= playerTrueX)  ||
-                (enemyTrueX <= playerTrueX + player.width &&
-                enemyTrueX + enemy.width >= playerTrueX + player.width)) {
-                if (enemy.row === player.row) {
-                    player.resetPlayer();
-                    player.lives--;
-                    console.log(player.lives);
-                    updateLives(player.lives);
-                }
-            }
-            if (player.lives === 0) {
-                player.lives--;
-                doc.getElementById('final-score').innerHTML = player.score;
-                doc.body.className = "dialogIsOpen";
+            if (enemyAndPlayerCollide(enemy, player)) {
+                killPlayerProgress();
             }
         });
+    }
+
+    function enemyAndPlayerCollide(enemy, player) {
+        return (enemyAndPlayerOccupySameColumn(enemy, player) &&
+                enemyAndPlayerOccupySameRow(enemy, player));
+    }
+
+    function enemyAndPlayerOccupySameColumn(enemy, player) {
+        // The enemy and player images have invisible pixels that must be accounted for
+        var enemyLeftBound = enemy.x + enemy.xOffset;
+        var enemyRightBound = enemyLeftBound + enemy.width;
+        var playerLeftBound = player.x + player.xOffset;
+        var playerRightBound = playerLeftBound + player.width;
+        // Return true if:
+        // The player's left boundary is between the enemy's left and right boundary
+        // OR the player's right boundary is between the enemy's left and right boundary
+        return (enemyLeftBound  <= playerLeftBound  &&
+                enemyRightBound >= playerLeftBound) ||
+               (enemyLeftBound  <= playerRightBound &&
+                enemyRightBound >= playerRightBound)
+    }
+
+    function enemyAndPlayerOccupySameRow(enemy, player) {
+        return enemy.row === player.row;
+    }
+
+    function killPlayerProgress() {
+        player.resetPlayerPosition();
+        reducePlayerLives();
+        checkGameOver();
+    }
+
+    function reducePlayerLives() {
+        player.lives--;
+        updateLives(player.lives);
+    }
+
+    function updateLives(lives) {
+        document.getElementById("lives").innerHTML = lives;
+    }
+
+    function checkGameOver() {
+        if (gameOver()) {
+            showGameOverModal();
+        }
+    }
+
+    function gameOver() {
+        return player.lives === 0;
+    }
+
+    function showGameOverModal() {
+        doc.getElementById('final-score').innerHTML = player.score;
+        doc.body.className = "dialogIsOpen";
+    }
+
+    var lastRow;
+    function checkGoalReached() {
+        if (goalReached(player.row)) {
+            updateScore(player.score);
+        }
+        lastRow = player.row;
+    }
+
+    function goalReached(currentRow) {
+        return lastRow === 0 && currentRow === 5;
+    }
+
+    function updateScore(score) {
+        document.getElementById("score").innerHTML = score;
     }
 
     /* This function initially draws the "game level", it will then call
@@ -215,4 +270,13 @@ var Engine = (function(global) {
 
 function playAgain() {
     Engine.init();
+}
+
+function quit() {
+    clearBodyClass();
+    document.getElementById('page-wrap').innerHTML = '<p>Thanks for playing!</p>';
+}
+
+function clearBodyClass() {
+    document.body.className = '';
 }

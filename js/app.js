@@ -79,12 +79,14 @@ Player.prototype.constructor = Player;
 
 Player.prototype.update = function() {
     if (this.y < -13) {
+        // Player reached goal and scores a point!
         this.score++;
-        updateScore(this.score);
-        this.resetPlayer();
+        this.resetPlayerPosition();
     } else if (this.y >= playerStartY) {
+        // Player cannot leave playing surface to bottom
         this.y = playerStartY;
     }
+    // Player cannot leave playing surface to left or right
     if (this.x < 0) {
         this.x = 0;
     }
@@ -111,19 +113,12 @@ Player.prototype.handleInput = function(direction) {
     } else {}
 };
 
-Player.prototype.resetPlayer = function() {
-    player.x = playerStartX;
-    player.y = playerStartY;
-    player.row = playerStartRow;
+Player.prototype.resetPlayerPosition = function() {
+    this.x = playerStartX;
+    this.y = playerStartY;
+    this.row = playerStartRow;
 };
 
-function updateScore(score) {
-    document.getElementById("score").innerHTML = score;
-}
-
-function updateLives(lives) {
-    document.getElementById("lives").innerHTML = lives;
-}
 // Now instantiate your objects.
 // Place all enemy objects in an array called allEnemies
 // Place the player object in a variable called player

@@ -1,5 +1,9 @@
 describe('Character', function() {
-    var defaultCharacter = new Character(1, 2, 3, 4);
+    var defaultCharacter;
+
+    beforeEach(function() {
+        defaultCharacter = new Character(1, 2, 3, 4);
+    });
 
     it('should have an X value Number', function() {
         expect(defaultCharacter.x).toEqual(jasmine.any(Number));
