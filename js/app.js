@@ -1,7 +1,7 @@
 /*
  * Base class for Enemy and Player classes
  */
-var Character = function(x, width, height, row) {
+var GamePiece = function(x, width, height, xOffset, row, sprite) {
     if(row === 1) {
         this.y = ENEMY_TOP_ROW_Y;
     } else if (row === 2) {
@@ -15,7 +15,27 @@ var Character = function(x, width, height, row) {
     this.x = x;
     this.width = width;
     this.height = height;
+    this.xOffset = xOffset;
     this.row = row;
+    this.sprite = sprite;
+};
+GamePiece.constructor = GamePiece;
+
+GamePiece.prototype.render = function() {
+    ctx.drawImage(Resources.get(this.sprite), this.x, this.y);
+};
+
+GamePiece.prototype.isTouching = function(other) {
+    var otherLeftBound = other.x + other.xOffset;
+    var otherRightBound = otherLeftBound + other.width;
+    var thisLeftBound = this.x + this.xOffset;
+    var thisRightBound = thisLeftBound + this.width;
+
+    return ((otherLeftBound  <= thisLeftBound    &&
+             otherRightBound >= thisLeftBound)   ||
+            (otherLeftBound  <= thisRightBound   &&
+             otherRightBound >= thisRightBound)) &&
+            (this.row === other.row)
 };
 
 
@@ -29,20 +49,17 @@ var ENEMY_START_POSITION = -100; // Enemies move from -100 through 500
 var ENEMY_RESET_POSITION = 500;
 var ENEMY_WIDTH = 98;
 var ENEMY_HEIGHT = 64;
+var ENEMY_X_OFFSET = 4;
+var ENEMY_SPRITE = 'images/enemy-bug.png';
 // Enemies our player must avoid
 var Enemy = function(x, row, speed) {
-    Character.call(this, x, ENEMY_WIDTH, ENEMY_HEIGHT, row);
-    // Variables applied to each of our instances go here,
-    // we've provided one for you to get started
+    GamePiece.call(this, x, ENEMY_WIDTH, ENEMY_HEIGHT,
+        ENEMY_X_OFFSET, row, ENEMY_SPRITE);
 
-    // The image/sprite for our enemies, this uses
-    // a helper we've provided to easily load images
-    this.sprite = 'images/enemy-bug.png';
-    this.xOffset = 4;
     this.speed = speed;
 };
-Enemy.prototype = Object.create(Character.prototype);
-Enemy.prototype.constructor = Enemy;
+Enemy.prototype = Object.create(GamePiece.prototype);
+Enemy.constructor = Enemy;
 
 // Update the enemy's position, required method for game
 // Parameter: dt, a time delta between ticks
@@ -56,13 +73,6 @@ Enemy.prototype.update = function(dt) {
     }
 };
 
-// Draw the enemy on the screen, required method for game
-Enemy.prototype.render = function() {
-    ctx.drawImage(Resources.get(this.sprite), this.x, this.y);
-};
-
-
-
 /*
  * Player class, constants, and functions
  */
@@ -70,21 +80,22 @@ var PLAYER_START_X = 200;
 var PLAYER_START_Y = 412;
 var PLAYER_WIDTH = 66;
 var PLAYER_HEIGHT = 74;
+var PLAYER_X_OFFSET = 19;
 var PLAYER_START_ROW = 5;
 var PLAYER_START_LIVES = 5;
 var PLAYER_START_SCORE = 0;
+var PLAYER_SPRITE = 'images/char-boy.png';
 var Player = function() {
-    Character.call(this, PLAYER_START_X, PLAYER_WIDTH, PLAYER_HEIGHT, PLAYER_START_ROW);
+    GamePiece.call(this, PLAYER_START_X, PLAYER_WIDTH, PLAYER_HEIGHT,
+        PLAYER_X_OFFSET, PLAYER_START_ROW, PLAYER_SPRITE);
 
-    this.sprite = 'images/char-boy.png';
-    this.xOffset = 19;
     this.verticalSpeed = 85;
     this.horizontalSpeed = 40;
     this.lives = PLAYER_START_LIVES;
     this.score = PLAYER_START_SCORE;
 };
-Player.prototype = Object.create(Character.prototype);
-Player.prototype.constructor = Player;
+Player.prototype = Object.create(GamePiece.prototype);
+Player.constructor = Player;
 
 Player.prototype.update = function() {
     if (this.y < -13) {
@@ -102,10 +113,6 @@ Player.prototype.update = function() {
     if (this.x > 400) {
         this.x = 400;
     }
-};
-
-Player.prototype.render = function() {
-    ctx.drawImage(Resources.get(this.sprite), this.x, this.y);
 };
 
 Player.prototype.handleInput = function(direction) {
@@ -131,18 +138,41 @@ Player.prototype.resetPosition = function() {
 Player.prototype.resetStats = function() {
     this.score = PLAYER_START_SCORE;
     this.lives = PLAYER_START_LIVES;
-}
+};
 
 Player.prototype.reset = function() {
     this.resetPosition();
     this.resetStats();
 };
 
+Player.prototype.addBonus = function(bonusItem) {
+    console.log(typeof bonusItem);
+    bonusItem.grantBonus(this);
+};
+
 
 /*
- * Bonus item base class for Gems and Hearts
+ * Bonus Item classes
  */
+var Gem = function(x, width, height, xOffset, row, sprite) {
+    GamePiece.call(this, x, width, height, xOffset, row, sprite);
+};
+Gem.prototype = Object.create(GamePiece.prototype);
+Gem.constructor = Gem;
 
+Gem.prototype.grantBonus = function(player) {
+    player.score++;
+};
+
+var Heart = function(x, width, height, xOffset, row, sprite) {
+    GamePiece.call(this, x, width, height, xOffset, row, sprite);
+};
+Heart.prototype = Object.create(GamePiece.prototype);
+Heart.constructor = Heart;
+
+Heart.prototype.grantBonus = function(player) {
+    player.lives++;
+};
 
 // Now instantiate your objects.
 // Place all enemy objects in an array called allEnemies
@@ -152,12 +182,12 @@ var allEnemies = generateEnemies(3, 6);
 function generateEnemies(min, max) {
     var enemies = [];
     var numEnemies = randomInteger(min, max);
-    console.log(numEnemies);
+
     for (var i = 0; i < numEnemies; i++) {
         var enemyStartX = randomInteger(ENEMY_START_POSITION, ENEMY_RESET_POSITION);
         var enemyRow = randomInteger(1, 4);
         var enemySpeed = randomInteger(10, 61);
-        console.log(enemyRow);
+
         enemies.push(new Enemy(enemyStartX, enemyRow, enemySpeed));
     }
     return enemies;

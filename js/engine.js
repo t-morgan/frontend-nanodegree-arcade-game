@@ -28,6 +28,7 @@ var Engine = (function(global) {
 
     canvas.width = 505;
     canvas.height = 606;
+    canvas.setAttribute('ClipToBounds', 'True');
     doc.getElementById('page-wrap').appendChild(canvas);
 
     /* This function serves as the kickoff point for the game loop itself
@@ -67,8 +68,21 @@ var Engine = (function(global) {
      */
     function init() {
         reset();
+        playerSelection();
         lastTime = Date.now();
         main();
+    }
+
+    function playerSelection(index) {
+        doc.body.className = 'selectCharacterIsOpen';
+        var characters = [
+            'images/char-boy.png',
+            'images/char-cat-girl.png',
+            'images/char-horn-girl.png',
+            'images/char-pink-girl.png'
+        ];
+
+        player.sprite = characters[index] || PLAYER_SPRITE;
     }
 
     /* This function is called by main (our game loop) and itself calls all
@@ -83,6 +97,7 @@ var Engine = (function(global) {
     function update(dt) {
         updateEntities(dt);
         checkCollisions();
+        checkPickUpBonus();
         checkGoalReached();
 
         /* Update timeSinceLastBonusRoll variable which is used to determine
@@ -108,34 +123,11 @@ var Engine = (function(global) {
 
     function checkCollisions() {
         allEnemies.forEach(function(enemy) {
-            if (enemyAndPlayerCollide(enemy, player)) {
+            if (enemy.isTouching(player)) {
+                console.log(enemy);
                 killPlayerProgress();
             }
         });
-    }
-
-    function enemyAndPlayerCollide(enemy, player) {
-        return (enemyAndPlayerOccupySameColumn(enemy, player) &&
-                enemyAndPlayerOccupySameRow(enemy, player));
-    }
-
-    function enemyAndPlayerOccupySameColumn(enemy, player) {
-        // The enemy and player images have invisible pixels that must be accounted for
-        var enemyLeftBound = enemy.x + enemy.xOffset;
-        var enemyRightBound = enemyLeftBound + enemy.width;
-        var playerLeftBound = player.x + player.xOffset;
-        var playerRightBound = playerLeftBound + player.width;
-        // Return true if:
-        // The player's left boundary is between the enemy's left and right boundary
-        // OR the player's right boundary is between the enemy's left and right boundary
-        return (enemyLeftBound  <= playerLeftBound  &&
-                enemyRightBound >= playerLeftBound) ||
-               (enemyLeftBound  <= playerRightBound &&
-                enemyRightBound >= playerRightBound)
-    }
-
-    function enemyAndPlayerOccupySameRow(enemy, player) {
-        return enemy.row === player.row;
     }
 
     function killPlayerProgress() {
@@ -165,10 +157,10 @@ var Engine = (function(global) {
 
     function showGameOverModal() {
         doc.getElementById('final-score').innerHTML = player.score;
-        doc.body.className = "dialogIsOpen";
+        doc.body.className = 'dialogIsOpen';
     }
 
-    var lastRow;
+    var lastRow; // Keep track of the last row the player occupied
     function checkGoalReached() {
         if (goalReached(player.row)) {
             updateScore(player.score);
@@ -184,8 +176,19 @@ var Engine = (function(global) {
         document.getElementById("score").innerHTML = score;
     }
 
+    function checkPickUpBonus() {
+        allBonusItems.forEach(function(bonusItem, i) {
+            if (player.isTouching(bonusItem)) {
+                player.addBonus(bonusItem);
+                allBonusItems.splice(i, 1);
+                updateScore(player.score);
+                updateLives(player.lives);
+            }
+        });
+    }
+
     function checkPlaceBonus(lastChecked) {
-        if (lastChecked >= 30 && randomInteger(0, 101) % 3) { // Place a bonus about every 90 seconds
+        if (lastChecked >= 30 && randomInteger(0, 101) % 3) {
             placeBonus();
             timeSinceLastBonusRoll = 0;
         }
@@ -193,25 +196,29 @@ var Engine = (function(global) {
 
     var allBonusItems = [];
     function placeBonus() {
-        console.log("Placing Bonus!");
         var bonusItems = [
             'images/Gem Blue.png',
             'images/Gem Green.png',
             'images/Gem Orange.png',
-            'images/Heart.png'
+            'images/Heart.png' // Keep Heart.png as last item in array unless changing bonusItem creation logic
             ],
             bonusToPlace = randomInteger(0, bonusItems.length),
             row = randomInteger(1, 4),
-            col = randomInteger(0, 6);
+            col = randomInteger(0, 6),
+            bonusItem;
 
-        console.log(bonusToPlace);
-        console.log("col: " + col + ", row: " + row);
+        if (bonusToPlace < bonusItems.length - 1) {
+            bonusItem = new Gem(col * 101, 81, 83, 10, row, bonusItems[bonusToPlace]);
+        } else {
+            bonusItem = new Heart(col * 101, 81, 83, 10, row, bonusItems[bonusToPlace]);
+        }
 
-        allBonusItems.push( {
-            'render': function(){
-                ctx.drawImage(Resources.get(bonusItems[bonusToPlace]), col * 101, row * 83)
-            }
-        });
+        allBonusItems.push(bonusItem);
+
+        // Do not allow too many bonus items to remain on game board
+        if (allBonusItems.length >= 5) {
+            allBonusItems = allBonusItems.slice(1);
+        }
 
     }
 
@@ -298,6 +305,9 @@ var Engine = (function(global) {
         'images/grass-block.png',
         'images/enemy-bug.png',
         'images/char-boy.png',
+        'images/char-cat-girl.png',
+        'images/char-horn-girl.png',
+        'images/char-pink-girl.png',
         'images/Gem Blue.png',
         'images/Gem Green.png',
         'images/Gem Orange.png',
@@ -311,7 +321,10 @@ var Engine = (function(global) {
      */
     global.ctx = ctx;
 
-    return {'init': init};
+    return {
+        'init': init,
+        'playerSelection': playerSelection
+    };
 })(this);
 
 function playAgain() {
@@ -321,6 +334,11 @@ function playAgain() {
 function quit() {
     clearBodyClass();
     document.getElementById('page-wrap').innerHTML = '<p>Thanks for playing!</p>';
+}
+
+function selectCharacter(index) {
+    Engine.playerSelection(index);
+    clearBodyClass();
 }
 
 function clearBodyClass() {

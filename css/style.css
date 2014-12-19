@@ -3,56 +3,50 @@ body {
     height:100%;
     margin:0;
     padding:0;
+    color: #3F3;
+    background-color: #4A4A4A;
+    font-weight: 700;
+    font-size: 16px;
+    font-family: courier, sans-serif;
 }
 
-#modal {
+#modal, #select-character {
     background: white;
-
     position: absolute;
     top: 50%;
     margin-top: -50px;
     margin-left: 25%;
     margin-right: 25%;
     width: 50%;
-
     /* Embiggen */
     transform: scale(1.5); /* prefix me */
-
     /* Hidden */
     opacity: 0;
     pointer-events: none;
 }
 
-.dialogIsOpen #page-wrap {
-
+.dialogIsOpen #page-wrap, .selectCharacterIsOpen #page-wrap {
     /* Blur and de-color */
     -webkit-filter: blur(5px) grayscale(50%);
     -moz-filter: blur(5px) grayscale(50%);
     -o-filter: blur(5px) grayscale(50%);
     -ms-filter: blur(5px) grayscale(50%);
     filter: blur(5px) grayscale(50%);
-
     /* Recede */
     transform: scale(0.9);
     -webkit-transform: scale(0.9);
-
 }
 
-.dialogIsOpen #modal {
-
+.dialogIsOpen #modal, .selectCharacterIsOpen #select-character {
     /* Regular size and visible */
     transform: scale(1); /* prefix me */
     opacity: 1;
-
     /* Clickable */
     pointer-events: auto;
-
 }
 
-#page-wrap, #modal {
-
+#page-wrap, #modal, #select-character {
     transition: all 0.4s ease; /* prefix me */
-
 }
 
 .clear {
@@ -63,9 +57,14 @@ body {
     margin-bottom: -50px;
 }
 
+#select-character {
+    background-color: #4A4A4A;
+}
+
 .stats {
     display: inline-block;
     padding: 10px;
+    border: 4px dotted #3F3;
 }
 
 .stat-value {
@@ -76,5 +75,6 @@ body {
     width: 50px;
     padding-top: 15px;
     border: 4px dotted #3f3;
-
+    color: black;
+    background-color: white;
 }
