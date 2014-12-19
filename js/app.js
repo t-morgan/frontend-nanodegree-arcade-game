@@ -1,12 +1,15 @@
+/*
+ * Base class for Enemy and Player classes
+ */
 var Character = function(x, width, height, row) {
     if(row === 1) {
-        this.y = enemyTopRowY;
+        this.y = ENEMY_TOP_ROW_Y;
     } else if (row === 2) {
-        this.y = enemyMiddleRowY;
+        this.y = ENEMY_MIDDLE_ROW_Y;
     } else if (row === 3) {
-        this.y = enemyBottomRowY;
+        this.y = ENEMY_BOTTOM_ROW_Y;
     } else {
-        this.y = playerStartY;
+        this.y = PLAYER_START_Y;
     }
 
     this.x = x;
@@ -15,16 +18,20 @@ var Character = function(x, width, height, row) {
     this.row = row;
 };
 
-var enemyTopRowY = 62;
-var enemyMiddleRowY = 145;
-var enemyBottomRowY = 230;
-var enemyStartPosition = -100; // Enemies move from -100 through 500
-var enemyResetPosition = 500;
-var enemyWidth = 98;
-var enemyHeight = 64;
+
+/*
+ * Enemy class, constants, and functions
+ */
+var ENEMY_TOP_ROW_Y = 62;
+var ENEMY_MIDDLE_ROW_Y = 145;
+var ENEMY_BOTTOM_ROW_Y = 230;
+var ENEMY_START_POSITION = -100; // Enemies move from -100 through 500
+var ENEMY_RESET_POSITION = 500;
+var ENEMY_WIDTH = 98;
+var ENEMY_HEIGHT = 64;
 // Enemies our player must avoid
 var Enemy = function(x, row, speed) {
-    Character.call(this, x, enemyWidth, enemyHeight, row);
+    Character.call(this, x, ENEMY_WIDTH, ENEMY_HEIGHT, row);
     // Variables applied to each of our instances go here,
     // we've provided one for you to get started
 
@@ -44,8 +51,8 @@ Enemy.prototype.update = function(dt) {
     // which will ensure the game runs at the same speed for
     // all computers.
     this.x = this.x + this.speed * dt;
-    if (this.x >= enemyResetPosition) {
-        this.x = enemyStartPosition;
+    if (this.x >= ENEMY_RESET_POSITION) {
+        this.x = ENEMY_START_POSITION;
     }
 };
 
@@ -54,25 +61,27 @@ Enemy.prototype.render = function() {
     ctx.drawImage(Resources.get(this.sprite), this.x, this.y);
 };
 
-// Now write your own player class
-// This class requires an update(), render() and
-// a handleInput() method.
-var playerStartX = 200;
-var playerStartY = 412;
-var playerWidth = 66;
-var playerHeight = 74;
-var playerStartRow = 5;
-var playerStartLives = 5;
-var playerStartScore = 0;
+
+
+/*
+ * Player class, constants, and functions
+ */
+var PLAYER_START_X = 200;
+var PLAYER_START_Y = 412;
+var PLAYER_WIDTH = 66;
+var PLAYER_HEIGHT = 74;
+var PLAYER_START_ROW = 5;
+var PLAYER_START_LIVES = 5;
+var PLAYER_START_SCORE = 0;
 var Player = function() {
-    Character.call(this, playerStartX, playerWidth, playerHeight, playerStartRow);
+    Character.call(this, PLAYER_START_X, PLAYER_WIDTH, PLAYER_HEIGHT, PLAYER_START_ROW);
 
     this.sprite = 'images/char-boy.png';
     this.xOffset = 19;
     this.verticalSpeed = 85;
     this.horizontalSpeed = 40;
-    this.lives = playerStartLives;
-    this.score = playerStartScore;
+    this.lives = PLAYER_START_LIVES;
+    this.score = PLAYER_START_SCORE;
 };
 Player.prototype = Object.create(Character.prototype);
 Player.prototype.constructor = Player;
@@ -81,10 +90,10 @@ Player.prototype.update = function() {
     if (this.y < -13) {
         // Player reached goal and scores a point!
         this.score++;
-        this.resetPlayerPosition();
-    } else if (this.y >= playerStartY) {
+        this.resetPosition();
+    } else if (this.y >= PLAYER_START_Y) {
         // Player cannot leave playing surface to bottom
-        this.y = playerStartY;
+        this.y = PLAYER_START_Y;
     }
     // Player cannot leave playing surface to left or right
     if (this.x < 0) {
@@ -109,15 +118,31 @@ Player.prototype.handleInput = function(direction) {
         this.x += this.horizontalSpeed;
     } else if (direction === 'down') {
         this.y += this.verticalSpeed;
-        if (this.row != playerStartRow) {this.row++;}
+        if (this.row != PLAYER_START_ROW) {this.row++;}
     } else {}
 };
 
-Player.prototype.resetPlayerPosition = function() {
-    this.x = playerStartX;
-    this.y = playerStartY;
-    this.row = playerStartRow;
+Player.prototype.resetPosition = function() {
+    this.x = PLAYER_START_X;
+    this.y = PLAYER_START_Y;
+    this.row = PLAYER_START_ROW;
 };
+
+Player.prototype.resetStats = function() {
+    this.score = PLAYER_START_SCORE;
+    this.lives = PLAYER_START_LIVES;
+}
+
+Player.prototype.reset = function() {
+    this.resetPosition();
+    this.resetStats();
+};
+
+
+/*
+ * Bonus item base class for Gems and Hearts
+ */
+
 
 // Now instantiate your objects.
 // Place all enemy objects in an array called allEnemies
@@ -129,7 +154,7 @@ function generateEnemies(min, max) {
     var numEnemies = randomInteger(min, max);
     console.log(numEnemies);
     for (var i = 0; i < numEnemies; i++) {
-        var enemyStartX = randomInteger(enemyStartPosition, enemyResetPosition);
+        var enemyStartX = randomInteger(ENEMY_START_POSITION, ENEMY_RESET_POSITION);
         var enemyRow = randomInteger(1, 4);
         var enemySpeed = randomInteger(10, 61);
         console.log(enemyRow);

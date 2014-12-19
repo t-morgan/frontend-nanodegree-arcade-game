@@ -23,6 +23,7 @@ var Engine = (function(global) {
         win = global.window,
         canvas = doc.createElement('canvas'),
         ctx = canvas.getContext('2d'),
+        timeSinceLastBonusRoll = 0,
         lastTime;
 
     canvas.width = 505;
@@ -41,6 +42,7 @@ var Engine = (function(global) {
          */
         var now = Date.now(),
             dt = (now - lastTime) / 1000.0;
+
 
         /* Call our update/render functions, pass along the time delta to
          * our update function since it may be used for smooth animation.
@@ -64,12 +66,9 @@ var Engine = (function(global) {
      * game loop.
      */
     function init() {
-        clearBodyClass();
         reset();
         lastTime = Date.now();
         main();
-        updateLives(player.lives);
-        updateScore(player.score);
     }
 
     /* This function is called by main (our game loop) and itself calls all
@@ -85,6 +84,12 @@ var Engine = (function(global) {
         updateEntities(dt);
         checkCollisions();
         checkGoalReached();
+
+        /* Update timeSinceLastBonusRoll variable which is used to determine
+         * if a bonus item should be placed on the game board.
+         */
+        timeSinceLastBonusRoll += dt;
+        checkPlaceBonus(timeSinceLastBonusRoll);
     }
 
     /* This is called by the update function  and loops through all of the
@@ -134,7 +139,7 @@ var Engine = (function(global) {
     }
 
     function killPlayerProgress() {
-        player.resetPlayerPosition();
+        player.resetPosition();
         reducePlayerLives();
         checkGameOver();
     }
@@ -177,6 +182,37 @@ var Engine = (function(global) {
 
     function updateScore(score) {
         document.getElementById("score").innerHTML = score;
+    }
+
+    function checkPlaceBonus(lastChecked) {
+        if (lastChecked >= 30 && randomInteger(0, 101) % 3) { // Place a bonus about every 90 seconds
+            placeBonus();
+            timeSinceLastBonusRoll = 0;
+        }
+    }
+
+    var allBonusItems = [];
+    function placeBonus() {
+        console.log("Placing Bonus!");
+        var bonusItems = [
+            'images/Gem Blue.png',
+            'images/Gem Green.png',
+            'images/Gem Orange.png',
+            'images/Heart.png'
+            ],
+            bonusToPlace = randomInteger(0, bonusItems.length),
+            row = randomInteger(1, 4),
+            col = randomInteger(0, 6);
+
+        console.log(bonusToPlace);
+        console.log("col: " + col + ", row: " + row);
+
+        allBonusItems.push( {
+            'render': function(){
+                ctx.drawImage(Resources.get(bonusItems[bonusToPlace]), col * 101, row * 83)
+            }
+        });
+
     }
 
     /* This function initially draws the "game level", it will then call
@@ -230,6 +266,10 @@ var Engine = (function(global) {
         /* Loop through all of the objects within the allEnemies array and call
          * the render function you have defined.
          */
+        allBonusItems.forEach(function(bonusItem) {
+            bonusItem.render();
+        });
+
         allEnemies.forEach(function(enemy) {
             enemy.render();
         });
@@ -242,8 +282,10 @@ var Engine = (function(global) {
      * those sorts of things. It's only called once by the init() method.
      */
     function reset() {
-        player.score = 0;
-        player.lives = 5;
+        clearBodyClass();
+        player.reset();
+        updateLives(player.lives);
+        updateScore(player.score);
     }
 
     /* Go ahead and load all of the images we know we're going to need to
@@ -255,7 +297,11 @@ var Engine = (function(global) {
         'images/water-block.png',
         'images/grass-block.png',
         'images/enemy-bug.png',
-        'images/char-boy.png'
+        'images/char-boy.png',
+        'images/Gem Blue.png',
+        'images/Gem Green.png',
+        'images/Gem Orange.png',
+        'images/Heart.png'
     ]);
     Resources.onReady(init);
 
